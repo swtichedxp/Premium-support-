@@ -1,23 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 
 export default function App() {
-  const [fileName, setFileName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [sliderVal, setSliderVal] = useState(0);
+  const [dragY, setDragY] = useState(0);
+  const containerRef = useRef(null);
 
-  const handleFileChange = (e) => {
-    if (e.target.files.length > 0) setFileName(e.target.files[0].name);
-  };
-
-  const triggerSubmit = async (e) => {
+  const triggerSubmit = async () => {
     setIsSubmitting(true);
-    
-    // We target the form manually since we aren't using a standard submit button
     const form = document.getElementById('reportForm');
     const formData = new FormData(form);
-    
-    // Exact logic from Web3Forms Documentation
     formData.append("access_key", "a77c7010-671b-4319-9a57-b2908beeae0d");
 
     try {
@@ -25,133 +17,142 @@ export default function App() {
         method: "POST",
         body: formData
       });
-
       const data = await response.json();
-
       if (data.success) {
         setIsSuccess(true);
       } else {
         alert("Error: " + data.message);
-        setSliderVal(0);
+        setDragY(0);
       }
     } catch (error) {
-      alert("Something went wrong. Please check your connection.");
-      setSliderVal(0);
+      alert("Submission failed. Check your connection.");
+      setDragY(0);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleSlider = (e) => {
-    const val = parseInt(e.target.value);
-    setSliderVal(val);
-    if (val === 100 && !isSubmitting) {
+  // Logic for the Swipe Up gesture
+  const handleTouchMove = (e) => {
+    if (isSubmitting || isSuccess) return;
+    const touch = e.touches[0];
+    const height = window.innerHeight;
+    const move = Math.max(0, height - touch.clientY);
+    const percent = Math.min(100, (move / (height * 0.4)) * 100);
+    setDragY(percent);
+    
+    if (percent >= 100) {
       triggerSubmit();
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#050505] text-white flex flex-col selection:bg-cyan-500/30 font-sans overflow-x-hidden">
-      
-      {/* Glow Effects */}
-      <div className="fixed top-[-5%] left-[-5%] w-[300px] h-[300px] bg-cyan-500/10 rounded-full blur-[90px] -z-10"></div>
+  const handleTouchEnd = () => {
+    if (dragY < 100) setDragY(0);
+  };
 
-      <nav className="flex justify-between items-center px-6 py-8 bg-[#050505]/90 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50">
-        <div className="text-[11px] font-black tracking-[0.4em] text-cyan-400">PREMIUM SUPPORT</div>
-        <div className="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_10px_#22c55e]"></div>
+  return (
+    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-cyan-500/30 overflow-hidden">
+      
+      {/* Dynamic Glass Blur Background */}
+      <div 
+        className="fixed inset-0 transition-all duration-700 -z-10"
+        style={{ 
+          filter: `blur(${dragY / 5}px)`,
+          opacity: isSuccess ? 0.3 : 1
+        }}
+      >
+        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-blue-600/5 rounded-full blur-[100px]"></div>
+      </div>
+
+      <nav className="flex justify-between items-center px-8 py-10 sticky top-0 z-50 mix-blend-difference">
+        <div className="text-[10px] font-black tracking-[0.5em] uppercase">Studio / Support</div>
+        <div className="text-[10px] opacity-40 italic">2026 Edition</div>
       </nav>
 
-      <main className="px-6 pt-12 pb-24 max-w-4xl mx-auto w-full">
-        {!isSuccess ? (
-          <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
-            <header className="mb-14">
-              <h1 className="text-[14vw] leading-[0.85] font-black uppercase tracking-tighter italic text-white">Submit A<br/>Report</h1>
-              <p className="text-cyan-400 font-bold text-[10px] tracking-[0.3em] uppercase mt-6 tracking-widest italic">Encrypted Submission</p>
-            </header>
+      <main className={`transition-all duration-1000 px-8 ${isSuccess ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100'}`}>
+        <header className="mb-16">
+          <h1 className="text-[18vw] leading-[0.8] font-black uppercase tracking-tighter italic mix-blend-overlay">
+            Contact<br/>Me
+          </h1>
+          <div className="h-[1px] w-20 bg-white/20 mt-10"></div>
+        </header>
 
-            <form id="reportForm" className="flex flex-col gap-9">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-9">
-                <div className="flex flex-col gap-3">
-                  <label className="text-[10px] uppercase font-black tracking-widest text-white/90 ml-1">Full Name</label>
-                  <input type="text" name="name" placeholder="Required" required className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-cyan-500 text-white" />
-                </div>
-                <div className="flex flex-col gap-3">
-                  <label className="text-[10px] uppercase font-black tracking-widest text-white/90 ml-1">Email Address</label>
-                  <input type="email" name="email" placeholder="Required" required className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-cyan-500 text-white" />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <label className="text-[10px] uppercase font-black tracking-widest text-white/90 ml-1">WhatsApp / Telegram</label>
-                <input type="text" name="social" placeholder="@username or number" required className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-cyan-500 text-white" />
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <label className="text-[10px] uppercase font-black tracking-widest text-white/90 ml-1">Attachment</label>
-                <div className="relative border-2 border-dashed border-white/10 rounded-xl py-10 flex flex-col items-center bg-white/[0.02]">
-                   <input type="file" name="attachment" accept="image/*" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer" />
-                   <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/40">{fileName ? fileName : "Tap to Upload"}</span>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <label className="text-[10px] uppercase font-black tracking-widest text-white/90 ml-1">Report Details</label>
-                <textarea name="message" rows="5" placeholder="Describe the issue..." required className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-cyan-500 text-white resize-none"></textarea>
-              </div>
-
-              {/* SLICE TO SUBMIT */}
-              <div className="mt-8">
-                <p className="text-[10px] uppercase font-black tracking-[0.3em] text-center mb-4 text-cyan-500 italic">
-                  {isSubmitting ? "TRANSMITTING DATA..." : "Slide to right to submit"}
-                </p>
-                <div className="relative h-16 bg-white/5 rounded-full border border-white/10 p-1 flex items-center">
-                  <div 
-                    className="absolute h-14 bg-cyan-500 rounded-full transition-all duration-75 flex items-center justify-end pr-4"
-                    style={{ width: `calc(${sliderVal}% + ${sliderVal > 90 ? '0px' : '56px'})`, left: '4px' }}
-                  >
-                    {sliderVal > 70 && <span className="text-black font-black text-[9px]">SUBMIT</span>}
-                  </div>
-                  <input 
-                    type="range" min="0" max="100" value={sliderVal} onChange={handleSlider} disabled={isSubmitting}
-                    className="absolute inset-0 w-full h-full appearance-none bg-transparent z-20 cursor-pointer slider-thumb"
-                  />
-                  <div className={`absolute inset-0 flex items-center justify-center pointer-events-none text-[10px] font-black tracking-[0.5em] transition-opacity ${sliderVal > 20 ? 'opacity-0' : 'opacity-20'}`}>
-                    {"> > > >"}
-                  </div>
-                </div>
-              </div>
-            </form>
+        <form id="reportForm" className="flex flex-col gap-12 pb-40">
+          <div className="group flex flex-col gap-2">
+            <label className="text-[10px] uppercase tracking-widest text-white/40">Full Name</label>
+            <input type="text" name="name" required className="bg-transparent border-b border-white/10 py-4 outline-none focus:border-white transition-all text-xl" placeholder="John Doe" />
           </div>
-        ) : (
-          <div className="min-h-[60vh] flex flex-col items-center justify-center text-center animate-in zoom-in-95 fade-in duration-700">
-            <div className="w-20 h-20 bg-cyan-500 rounded-full flex items-center justify-center mb-8 shadow-[0_0_30px_rgba(6,182,212,0.5)]">
-              <svg className="w-10 h-10 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="4"><path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </div>
-            <h2 className="text-[15vw] font-black italic uppercase tracking-tighter">Success</h2>
-            <p className="text-[11px] uppercase font-bold tracking-[0.2em] text-cyan-400 mb-12">Thanks for your report. We'll respond as soon as possible.</p>
-            <button onClick={() => {setIsSuccess(false); setFileName(""); setSliderVal(0);}} className="px-10 py-4 border border-white/20 rounded-full text-[10px] font-black tracking-widest hover:bg-white hover:text-black transition-all uppercase">New Report</button>
+
+          <div className="group flex flex-col gap-2">
+            <label className="text-[10px] uppercase tracking-widest text-white/40">Email Address</label>
+            <input type="email" name="email" required className="bg-transparent border-b border-white/10 py-4 outline-none focus:border-white transition-all text-xl" placeholder="hello@studio.com" />
           </div>
-        )}
+
+          <div className="group flex flex-col gap-2">
+            <label className="text-[10px] uppercase tracking-widest text-white/40">WhatsApp / Telegram</label>
+            <input type="text" name="social" required className="bg-transparent border-b border-white/10 py-4 outline-none focus:border-white transition-all text-xl" placeholder="@username" />
+          </div>
+
+          <div className="group flex flex-col gap-2">
+            <label className="text-[10px] uppercase tracking-widest text-white/40">Message</label>
+            <textarea name="message" rows="3" required className="bg-transparent border-b border-white/10 py-4 outline-none focus:border-white transition-all text-xl resize-none" placeholder="Project details..."></textarea>
+          </div>
+        </form>
       </main>
 
+      {/* Swipe Up Success Layer */}
+      {isSuccess && (
+        <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center animate-in fade-in zoom-in duration-1000 bg-black/40 backdrop-blur-3xl">
+          <div className="text-center px-10">
+            <div className="w-px h-24 bg-cyan-500 mx-auto mb-10 animate-tall"></div>
+            <h2 className="text-[15vw] font-black uppercase italic leading-none mb-6">Sent</h2>
+            <p className="text-[10px] tracking-[0.4em] uppercase opacity-40 mb-12">Message Logged Successfully</p>
+            <button 
+              onClick={() => {setIsSuccess(false); setDragY(0);}} 
+              className="text-[9px] font-black tracking-[0.5em] uppercase border border-white/20 px-8 py-4 rounded-full hover:bg-white hover:text-black transition-all"
+            >
+              Back to Studio
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Swipe Up Interaction Area */}
+      {!isSuccess && (
+        <div 
+          className="fixed bottom-0 left-0 right-0 h-32 flex flex-col items-center justify-end pb-8 cursor-pointer z-[100]"
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div className="relative flex flex-col items-center gap-4">
+            <div 
+              className="text-[9px] font-black tracking-[0.5em] uppercase transition-all duration-300"
+              style={{ 
+                transform: `translateY(-${dragY / 2}px)`,
+                opacity: isSubmitting ? 0 : 1 - (dragY / 100)
+              }}
+            >
+              {isSubmitting ? "Uploading..." : "Swipe up to submit"}
+            </div>
+            
+            {/* The Animated Arrow/Indicator */}
+            <div className="w-px h-12 bg-white/20 relative overflow-hidden">
+               <div 
+                className="absolute inset-0 bg-cyan-400 transition-all duration-100"
+                style={{ transform: `translateY(${100 - dragY}%)` }}
+               ></div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style dangerouslySetInnerHTML={{ __html: `
-        .slider-thumb::-webkit-slider-thumb {
-          appearance: none;
-          width: 56px;
-          height: 56px;
-          background: white;
-          border-radius: 50%;
-          cursor: pointer;
-          border: 4px solid #050505;
+        @keyframes tall {
+          from { height: 0; }
+          to { height: 96px; }
         }
-        .slider-thumb::-moz-range-thumb {
-          width: 56px;
-          height: 56px;
-          background: white;
-          border-radius: 50%;
-          cursor: pointer;
-          border: 4px solid #050505;
-        }
+        .animate-tall { animation: tall 1.5s cubic-bezier(0.16, 1, 0.3, 1); }
       `}} />
     </div>
   );
