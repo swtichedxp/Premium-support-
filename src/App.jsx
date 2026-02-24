@@ -135,4 +135,4 @@ export default function App() {
 
       <footer className="mt-auto p-10 border-t border-white/5 text-[9px] font-bold tracking-[0.5em] text-white/20 flex justify-between items-center">
         <span>EST 2026</span>
-      
+            
