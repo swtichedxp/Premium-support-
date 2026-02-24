@@ -54,7 +54,7 @@ export default function App() {
           <h1 className="text-[14vw] leading-[0.85] font-black uppercase tracking-tighter italic text-white">
             Submit A<br/>Report
           </h1>
-          <p className="text-cyan-400 font-bold text-[10px] tracking-[0.4em] uppercase mt-6">Secure Line v1.0</p>
+          <p className="text-cyan-400 font-bold text-[10px] tracking-[0.4em] uppercase mt-6">___</p>
         </header>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-10 pb-32">
@@ -75,7 +75,7 @@ export default function App() {
           </div>
 
           <div className="flex flex-col gap-3">
-            <label className="text-[10px] uppercase font-black tracking-widest text-white/90">Direct Contact</label>
+            <label className="text-[10px] uppercase font-black tracking-widest text-white/90">Username / Number</label>
             <input 
               type="text" name="social" required placeholder="@username or number"
               className="bg-white/5 border border-white/10 rounded-2xl px-6 py-5 outline-none focus:border-cyan-500 transition-all text-lg placeholder:text-white/5"
