@@ -3,10 +3,7 @@ import React, { useState, useRef } from 'react';
 export default function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [dragY, setDragY] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-
-  const MAX_PULL = 200; // Lowered for easier reach
+  const [sliderVal, setSliderVal] = useState(0);
 
   const triggerSubmit = async () => {
     setIsSubmitting(true);
@@ -24,126 +21,152 @@ export default function App() {
         setIsSuccess(true);
       } else {
         alert("Error: " + data.message);
-        setDragY(0);
+        setSliderVal(0);
       }
     } catch (error) {
-      alert("Submission failed. Check your connection.");
-      setDragY(0);
+      alert("Submission failed. Check connection.");
+      setSliderVal(0);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleTouchMove = (e) => {
-    if (isSubmitting || isSuccess) return;
-    const touch = e.touches[0];
-    const pull = Math.max(0, window.innerHeight - touch.clientY);
-    // Morphic resistance: it gets harder to pull the higher it goes
-    const resistance = pull > MAX_PULL ? MAX_PULL + (pull - MAX_PULL) * 0.1 : pull;
-    setDragY(resistance);
-    setIsDragging(true);
-
-    if (resistance >= MAX_PULL + 50) {
-      setIsDragging(false);
+  const handleSliderChange = (e) => {
+    const val = parseInt(e.target.value);
+    setSliderVal(val);
+    
+    // Trigger when slid 95% to the left (input is reversed)
+    if (val >= 95 && !isSubmitting) {
       triggerSubmit();
     }
   };
 
-  const handleTouchEnd = () => {
-    setIsDragging(false);
-    if (dragY < MAX_PULL + 50) setDragY(0);
+  const handleRelease = () => {
+    if (sliderVal < 95) {
+      setSliderVal(0); // Snap back spring effect
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#020202] text-white font-sans selection:bg-cyan-500/30 overflow-x-hidden">
       
-      {/* Morphic Background Glows */}
+      {/* Background Morphic Glow */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div 
-          className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-cyan-600/20 rounded-full blur-[120px] transition-transform duration-1000"
-          style={{ transform: `scale(${1 + dragY/500}) translate(${dragY/10}px, ${-dragY/10}px)` }}
-        ></div>
+        <div className="absolute top-[-5%] right-[-5%] w-[400px] h-[400px] bg-cyan-600/10 rounded-full blur-[120px]"></div>
       </div>
 
-      <nav className="flex justify-between items-center px-8 py-10 sticky top-0 z-50 bg-[#020202]/50 backdrop-blur-md">
-        <div className="text-[11px] font-black tracking-[0.5em] uppercase">STUDIO</div>
-        <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_10px_#22d3ee]"></div>
+      <nav className="flex justify-between items-center px-8 py-10 sticky top-0 z-50 bg-[#020202]/80 backdrop-blur-xl border-b border-white/5">
+        <div className="text-[11px] font-black tracking-[0.5em] uppercase text-white">STUDIO</div>
+        <div className="text-[10px] font-bold text-cyan-400">2026.v1</div>
       </nav>
 
-      <main className={`transition-all duration-1000 ease-in-out px-8 ${isSuccess ? 'blur-2xl opacity-0 scale-110' : 'opacity-100'}`}>
-        <header className="mb-16">
-          <h1 className="text-[16vw] leading-[0.85] font-black uppercase tracking-tighter italic">
-            Submit A<br/>Report
+      <main className={`transition-all duration-700 px-8 pt-10 ${isSuccess ? 'blur-3xl opacity-0 scale-90' : 'opacity-100'}`}>
+        <header className="mb-14">
+          <h1 className="text-[14vw] leading-[0.85] font-black uppercase tracking-tighter italic text-white">
+            Send A<br/>Report
           </h1>
         </header>
 
-        <form id="reportForm" className="flex flex-col gap-12 pb-60"> {/* Added large bottom padding */}
+        <form id="reportForm" className="flex flex-col gap-10 pb-48">
           {[
-            { label: "Full Name", name: "name", type: "text", ph: "Enter your name" },
-            { label: "Email Address", name: "email", type: "email", ph: "Enter your email" },
-            { label: "Contact (WA/TG)", name: "social", type: "text", ph: "@username" }
-          ].map((field) => (
-            <div key={field.name} className="flex flex-col gap-3 group">
-              <label className="text-[10px] uppercase font-black tracking-widest text-cyan-500/60 transition-colors group-focus-within:text-cyan-400">
-                {field.label}
-              </label>
+            { label: "Full Name", name: "name", ph: "Enter your name" },
+            { label: "Email Address", name: "email", ph: "Enter your email" },
+            { label: "Contact (WA/TG)", name: "social", ph: "@username" }
+          ].map((f) => (
+            <div key={f.name} className="flex flex-col gap-3">
+              <label className="text-[10px] uppercase font-black tracking-widest text-cyan-500">{f.label}</label>
               <input 
-                type={field.type} name={field.name} required placeholder={field.ph}
-                className="bg-transparent border-b-2 border-white/10 py-4 outline-none focus:border-cyan-500 transition-all text-xl placeholder:text-white/10"
+                type="text" name={f.name} required placeholder={f.ph}
+                className="bg-transparent border-b-2 border-white/10 py-4 outline-none focus:border-white transition-all text-xl text-white placeholder:text-white/10"
               />
             </div>
           ))}
 
-          <div className="flex flex-col gap-3 group">
-            <label className="text-[10px] uppercase font-black tracking-widest text-cyan-500/60">Message</label>
+          <div className="flex flex-col gap-3">
+            <label className="text-[10px] uppercase font-black tracking-widest text-cyan-500">Message</label>
             <textarea 
               name="message" rows="4" required placeholder="Describe the issue..."
-              className="bg-transparent border-b-2 border-white/10 py-4 outline-none focus:border-cyan-500 transition-all text-xl placeholder:text-white/10 resize-none"
+              className="bg-transparent border-b-2 border-white/10 py-4 outline-none focus:border-white transition-all text-xl text-white placeholder:text-white/10 resize-none"
             ></textarea>
           </div>
         </form>
       </main>
 
-      {/* Morphic Success State */}
+      {/* Success State */}
       {isSuccess && (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-10 animate-in fade-in zoom-in-95 duration-700">
-          <div className="bg-white/5 border border-white/10 backdrop-blur-3xl p-12 rounded-[40px] flex flex-col items-center text-center shadow-2xl">
-            <div className="w-24 h-24 bg-cyan-500 rounded-full flex items-center justify-center mb-8 shadow-[0_0_50px_rgba(6,182,212,0.5)]">
-               <svg className="w-12 h-12 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="4"><path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-8 animate-in fade-in zoom-in-95 duration-500">
+          <div className="bg-white/5 border border-white/10 backdrop-blur-3xl p-10 rounded-[30px] w-full max-w-sm text-center shadow-2xl">
+            <div className="w-20 h-20 bg-cyan-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_40px_rgba(6,182,212,0.4)]">
+               <svg className="w-10 h-10 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="4"><path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </div>
-            <h2 className="text-5xl font-black uppercase italic mb-2">Sent</h2>
-            <p className="text-[10px] font-bold tracking-[0.4em] uppercase text-cyan-400 mb-10">Report Authenticated</p>
+            <h2 className="text-4xl font-black uppercase italic mb-2 text-white">Success</h2>
+            <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-cyan-400 mb-8 text-white">Report Logged</p>
             <button 
-              onClick={() => {setIsSuccess(false); setDragY(0);}} 
-              className="w-full py-5 bg-white text-black font-black uppercase text-[10px] tracking-[0.4em] rounded-2xl hover:bg-cyan-400 transition-colors"
+              onClick={() => {setIsSuccess(false); setSliderVal(0);}} 
+              className="w-full py-4 bg-white text-black font-black uppercase text-[10px] tracking-[0.3em] rounded-xl transition-all active:scale-95"
             >
-              Back to Studio
+              Back
             </button>
           </div>
         </div>
       )}
 
-      {/* Morphic Swipe Controller */}
+      {/* Morphic Horizontal Slide-to-Submit (RIGHT TO LEFT) */}
       {!isSuccess && (
-        <div 
-          className="fixed bottom-0 left-0 right-0 h-48 flex flex-col items-center justify-end pb-12 z-[90] pointer-events-auto"
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          {/* Glass Capsule */}
-          <div 
-            className={`w-[80%] max-w-sm h-20 bg-white/5 border border-white/10 backdrop-blur-2xl rounded-full relative flex items-center justify-center transition-all ${!isDragging ? 'duration-500 spring-bounce' : 'duration-0'}`}
-            style={{ 
-              transform: `translateY(-${dragY}px)`,
-              boxShadow: dragY > 100 ? `0 20px 40px rgba(6, 182, 212, ${dragY/400})` : 'none'
-            }}
-          >
-            <div className="absolute inset-0 bg-cyan-500/10 rounded-full pointer-events-none" style={{ opacity: dragY/MAX_PULL }}></div>
+        <div className="fixed bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-[#020202] via-[#020202]/90 to-transparent z-[90]">
+          <div className="max-w-md mx-auto relative h-20 bg-white/5 border border-white/10 backdrop-blur-2xl rounded-2xl flex items-center px-4">
             
-            <p className="text-[9px] font-black tracking-[0.4em] uppercase z-10 text-center">
-              {isSubmitting ? "TRANSMITTING..." : dragY > 150 ? "RELEASE TO SEND" : "SWIPE UP TO SUBMIT"}
-            </p>
+            {/* The Track Text */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <span className={`text-[10px] font-black tracking-[0.4em] uppercase transition-all duration-300 ${sliderVal > 10 ? 'opacity-0' : 'opacity-30'}`}>
+                {isSubmitting ? "SENDING..." : "Slide Left to Submit"}
+              </span>
+            </div>
 
-            {/* Morphic Fluid Indicator */}
+            {/* The Slider */}
+            <input 
+              type="range"
+              min="0"
+              max="100"
+              value={sliderVal}
+              onChange={handleSliderChange}
+              onTouchEnd={handleRelease}
+              onMouseUp={handleRelease}
+              disabled={isSubmitting}
+              className={`w-full h-full appearance-none bg-transparent z-10 cursor-pointer slider-horizontal-reversed ${!isSubmitting ? 'active:cursor-grabbing' : ''}`}
+            />
+
+            {/* The Visual Progress Fill (Right to Left) */}
             <div 
-              className="absolute bottom-[-10px] w-12 h-1
+              className="absolute right-4 h-12 bg-cyan-500 rounded-xl transition-all duration-75 flex items-center justify-start pl-4"
+              style={{ width: `calc(${sliderVal}% + 48px)`, opacity: sliderVal > 5 ? 1 : 0 }}
+            >
+              {sliderVal > 70 && <span className="text-black font-black text-[9px] tracking-widest uppercase">Release</span>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        /* Handle styling */
+        .slider-horizontal-reversed::-webkit-slider-thumb {
+          appearance: none;
+          width: 48px;
+          height: 48px;
+          background: white;
+          border-radius: 12px;
+          cursor: pointer;
+          box-shadow: 0 0 20px rgba(0,0,0,0.5);
+          transition: transform 0.2s ease;
+          position: relative;
+          z-index: 20;
+        }
+        /* Custom track direction logic handled via range input flip */
+        .slider-horizontal-reversed {
+          direction: rtl; /* Makes it slide from right to left */
+        }
+        input, textarea { font-size: 16px !important; } /* Prevents iOS auto-zoom */
+      `}} />
+    </div>
+  );
+}
