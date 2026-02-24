@@ -14,7 +14,6 @@ export default function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     const formData = new FormData(e.target);
 
     try {
@@ -22,14 +21,10 @@ export default function App() {
         method: "POST",
         body: formData
       });
-
-      if (response.ok) {
-        setIsSuccess(true);
-      } else {
-        alert("Submission failed. Please try again.");
-      }
+      if (response.ok) setIsSuccess(true);
+      else alert("Transmission Error.");
     } catch (error) {
-      alert("An error occurred. Check your connection.");
+      alert("Network Error.");
     } finally {
       setIsSubmitting(false);
     }
@@ -38,110 +33,109 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#050505] text-white flex flex-col selection:bg-cyan-500/30 font-sans overflow-x-hidden">
       
-      {/* Background Accents */}
-      <div className="fixed top-[-10%] left-[-20%] w-[300px] h-[300px] bg-cyan-600/10 rounded-full blur-[80px] -z-10 animate-pulse"></div>
-      <div className="fixed bottom-[20%] right-[-20%] w-[250px] h-[250px] bg-blue-600/10 rounded-full blur-[80px] -z-10"></div>
+      {/* Background Neon Elements */}
+      <div className="fixed top-[-10%] left-[-10%] w-[400px] h-[400px] bg-cyan-500/10 rounded-full blur-[120px] -z-10 animate-pulse"></div>
+      <div className="fixed bottom-0 right-0 w-[300px] h-[300px] bg-blue-600/5 rounded-full blur-[100px] -z-10"></div>
 
-      {/* Nav */}
-      <nav className="flex justify-between items-center px-6 py-6 border-b border-white/5 bg-black/20 backdrop-blur-md sticky top-0 z-50">
-        <div className="text-[10px] font-black tracking-[0.4em] text-cyan-400 uppercase">PREMIUM</div>
-        <div className="flex items-center gap-2">
-          <span className={`w-1.5 h-1.5 rounded-full animate-pulse shadow-lg ${isSuccess ? 'bg-cyan-400 shadow-cyan-500' : 'bg-green-500 shadow-green-500'}`}></span>
-          <span className="text-[8px] font-bold opacity-40 uppercase tracking-widest">{isSuccess ? 'Verified' : 'Live'}</span>
+      {/* Ultra-Thin Nav */}
+      <nav className="flex justify-between items-center px-6 py-8 sticky top-0 z-50 mix-blend-difference">
+        <div className="text-[10px] font-black tracking-[0.5em] text-white">PREMIUM SUPPORT</div>
+        <div className="flex items-center gap-4">
+          <div className="hidden md:block text-[8px] font-bold opacity-30 tracking-[0.2em]">EST. 2026</div>
+          <div className="w-8 h-[1px] bg-white/20"></div>
         </div>
       </nav>
 
-      <main className="px-6 pt-10 pb-24 max-w-2xl mx-auto w-full flex flex-col items-center">
+      <main className="px-6 pt-10 pb-24 max-w-4xl mx-auto w-full">
         
         {!isSuccess ? (
-          <>
-            <section className="mb-12 w-full text-left">
-              <h1 className="text-[16vw] leading-[0.85] font-[900] uppercase tracking-tighter italic">
-                Submit<br/>Issue
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Massive Header Section */}
+            <section className="mb-20">
+              <h1 className="text-[18vw] leading-[0.8] font-[900] uppercase tracking-tighter italic mix-blend-overlay opacity-90">
+                Lodge<br/>Ticket
               </h1>
-              <p className="text-cyan-500/60 font-mono text-[10px] mt-4 tracking-[0.3em] uppercase tracking-widest leading-relaxed">
-                // Priority Response Enabled
-              </p>
+              <div className="flex items-center gap-4 mt-8">
+                <div className="h-[1px] w-12 bg-cyan-500"></div>
+                <p className="text-cyan-500 font-mono text-[9px] tracking-[0.4em] uppercase">Ready for transmission</p>
+              </div>
             </section>
 
-            <div className="relative w-full">
-              <div className="absolute -inset-1 bg-gradient-to-b from-cyan-500/20 to-transparent rounded-[2.5rem] blur-xl opacity-40"></div>
+            {/* No-Container Form: Just floating elements */}
+            <form onSubmit={handleSubmit} className="flex flex-col gap-12">
+              <input type="hidden" name="access_key" value="YOUR_ACCESS_KEY_HERE" />
               
-              <form 
-                onSubmit={handleSubmit}
-                className="relative bg-white/[0.02] backdrop-blur-3xl border border-white/10 p-7 md:p-10 rounded-[2.5rem] flex flex-col gap-6"
-              >
-                <input type="hidden" name="access_key" value="YOUR_ACCESS_KEY_HERE" />
-                
-                <div className="flex flex-col gap-2">
-                  <label className="text-[9px] uppercase font-black tracking-widest text-cyan-500 ml-1">Full Name</label>
-                  <input type="text" name="name" placeholder="John Doe" required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 outline-none focus:border-cyan-500 transition-all placeholder:text-white/5" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div className="group flex flex-col gap-3">
+                  <label className="text-[10px] uppercase font-bold tracking-[0.3em] text-white/30 group-focus-within:text-cyan-400 transition-colors">Client Identity</label>
+                  <input type="text" name="name" placeholder="Name or Organization" required className="bg-transparent border-b border-white/10 py-4 outline-none focus:border-cyan-500 transition-all placeholder:text-white/5 text-lg" />
                 </div>
 
-                <div className="flex flex-col gap-2">
-                  <label className="text-[9px] uppercase font-black tracking-widest text-cyan-500 ml-1">Email Address</label>
-                  <input type="email" name="email" placeholder="email@example.com" required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 outline-none focus:border-cyan-500 transition-all placeholder:text-white/5" />
+                <div className="group flex flex-col gap-3">
+                  <label className="text-[10px] uppercase font-bold tracking-[0.3em] text-white/30 group-focus-within:text-cyan-400 transition-colors">Secure Channel</label>
+                  <input type="email" name="email" placeholder="Verification Email" required className="bg-transparent border-b border-white/10 py-4 outline-none focus:border-cyan-500 transition-all placeholder:text-white/5 text-lg" />
                 </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-[9px] uppercase font-black tracking-widest text-cyan-500 ml-1">WhatsApp / Telegram</label>
-                  <input type="text" name="contact_method" placeholder="@username or +123..." required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 outline-none focus:border-cyan-500 transition-all placeholder:text-white/5" />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-[9px] uppercase font-black tracking-widest text-cyan-500 ml-1">Attachment</label>
-                  <div className="relative group cursor-pointer overflow-hidden">
-                    <input type="file" name="attachment" accept="image/*" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
-                    <div className="w-full bg-white/5 border border-dashed border-white/20 rounded-xl px-4 py-8 text-center transition-all group-hover:border-cyan-500/50">
-                      <p className="text-[10px] uppercase tracking-widest opacity-30">
-                        {fileName ? `Selected: ${fileName}` : "Tap to select file"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-[9px] uppercase font-black tracking-widest text-cyan-500 ml-1">Report Details</label>
-                  <textarea name="message" rows="4" placeholder="Describe the issue..." required className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 outline-none focus:border-cyan-500 transition-all placeholder:text-white/5 resize-none"></textarea>
-                </div>
-
-                <button 
-                  type="submit" 
-                  disabled={isSubmitting}
-                  className="w-full bg-white text-black font-[900] py-5 rounded-xl uppercase text-[10px] tracking-[0.4em] active:scale-[0.97] transition-all mt-4 disabled:opacity-50"
-                >
-                  {isSubmitting ? "Processing..." : "Initialize Ticket"}
-                </button>
-              </form>
-            </div>
-          </>
-        ) : (
-          /* SUCCESS STATE */
-          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-in fade-in zoom-in duration-500">
-            <div className="relative mb-8">
-              <div className="absolute inset-0 bg-cyan-500/30 blur-3xl rounded-full"></div>
-              <div className="relative h-24 w-24 border-2 border-cyan-400 rounded-full flex items-center justify-center bg-white/5 backdrop-blur-xl">
-                 <svg className="w-10 h-10 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
-                 </svg>
               </div>
-            </div>
-            <h2 className="text-4xl font-black italic uppercase tracking-tighter mb-4">Transmission<br/>Received</h2>
-            <div className="bg-white/5 border border-white/10 backdrop-blur-2xl p-6 rounded-2xl max-w-xs">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-cyan-400 font-bold mb-2 italic">Report Logged Successfully</p>
-              <p className="text-xs text-white/50 leading-relaxed tracking-wide">
-                Thanks for your report. Our elite support team will respond to your secure channel as soon as possible.
-              </p>
-            </div>
+
+              <div className="group flex flex-col gap-3">
+                <label className="text-[10px] uppercase font-bold tracking-[0.3em] text-white/30 group-focus-within:text-cyan-400 transition-colors">Social (WA/TG)</label>
+                <input type="text" name="social" placeholder="@username or +000..." required className="bg-transparent border-b border-white/10 py-4 outline-none focus:border-cyan-500 transition-all placeholder:text-white/5 text-lg" />
+              </div>
+
+              <div className="group flex flex-col gap-3">
+                <label className="text-[10px] uppercase font-bold tracking-[0.3em] text-white/30 group-focus-within:text-cyan-400 transition-colors">Visual Evidence (KB only)</label>
+                <div className="relative border border-dashed border-white/10 rounded-2xl py-10 flex flex-col items-center justify-center hover:border-cyan-500/50 transition-all">
+                   <input type="file" name="attachment" accept="image/*" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                   <span className="text-[10px] uppercase tracking-[0.2em] opacity-40">
+                     {fileName ? fileName : "Tap to attach file"}
+                   </span>
+                </div>
+              </div>
+
+              <div className="group flex flex-col gap-3">
+                <label className="text-[10px] uppercase font-bold tracking-[0.3em] text-white/30 group-focus-within:text-cyan-400 transition-colors">Issue Brief</label>
+                <textarea name="message" rows="4" placeholder="Describe the situation..." required className="bg-transparent border-b border-white/10 py-4 outline-none focus:border-cyan-500 transition-all placeholder:text-white/5 text-lg resize-none"></textarea>
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="group relative w-full py-8 mt-10 overflow-hidden border border-white/10 rounded-full hover:border-cyan-500 transition-all active:scale-[0.98]"
+              >
+                <div className="relative z-10 flex items-center justify-center gap-4">
+                  <span className="text-[11px] font-black uppercase tracking-[0.6em]">
+                    {isSubmitting ? "Encrypting..." : "Initialize Transfer"}
+                  </span>
+                </div>
+                {/* Button Glow Effect */}
+                <div className="absolute inset-0 bg-cyan-500/0 group-hover:bg-cyan-500/5 transition-colors"></div>
+              </button>
+            </form>
+          </div>
+        ) : (
+          /* CINEMATIC SUCCESS STATE */
+          <div className="min-h-[70vh] flex flex-col items-center justify-center text-center animate-in zoom-in-95 fade-in duration-1000">
+            <h2 className="text-[12vw] font-black italic uppercase tracking-tighter leading-none mb-6">
+              Confirmed
+            </h2>
+            <div className="w-16 h-[1px] bg-cyan-500 mb-8"></div>
+            <p className="max-w-xs text-[10px] uppercase tracking-[0.3em] leading-relaxed text-white/40">
+              Your report has been logged into our secure infrastructure. Response incoming shortly.
+            </p>
             <button 
               onClick={() => {setIsSuccess(false); setFileName("");}} 
-              className="mt-12 text-[9px] uppercase tracking-[0.5em] font-bold text-white/30 hover:text-cyan-400 transition-colors"
+              className="mt-20 text-[9px] font-bold tracking-[0.4em] opacity-20 hover:opacity-100 transition-opacity border-b border-white/20 pb-1"
             >
-              [ Send another report ]
+              RETURN TO TERMINAL
             </button>
           </div>
         )}
       </main>
+
+      <footer className="p-10 opacity-20 text-[8px] tracking-[0.5em] uppercase flex justify-between items-center">
+        <div>&copy; 2026 PREMIUM</div>
+        <div>ALL CHANNELS SECURED</div>
+      </footer>
     </div>
   );
-}
+              }
