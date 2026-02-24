@@ -1,10 +1,15 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 export default function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [dragY, setDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef(null);
+
+  // Constants for the "Feel"
+  const THRESHOLD = 150; // Pixels to pull up to trigger
+  const MAX_PULL = 220;  // Cap for the pull distance
 
   const triggerSubmit = async () => {
     setIsSubmitting(true);
@@ -32,115 +37,127 @@ export default function App() {
     }
   };
 
-  // Logic for the Swipe Up gesture
+  const handleTouchStart = () => setIsDragging(true);
+
   const handleTouchMove = (e) => {
     if (isSubmitting || isSuccess) return;
     const touch = e.touches[0];
-    const height = window.innerHeight;
-    const move = Math.max(0, height - touch.clientY);
-    const percent = Math.min(100, (move / (height * 0.4)) * 100);
-    setDragY(percent);
+    const screenHeight = window.innerHeight;
     
-    if (percent >= 100) {
+    // Calculate distance from bottom
+    const pull = Math.max(0, screenHeight - touch.clientY);
+    // Apply a "resistance" curve so it feels heavy as you pull higher
+    const resistance = pull > MAX_PULL ? MAX_PULL + (pull - MAX_PULL) * 0.2 : pull;
+    
+    setDragY(resistance);
+
+    if (resistance >= MAX_PULL) {
+      setIsDragging(false);
       triggerSubmit();
     }
   };
 
   const handleTouchEnd = () => {
-    if (dragY < 100) setDragY(0);
+    setIsDragging(false);
+    // Spring back if threshold wasn't met
+    if (dragY < MAX_PULL) {
+      setDragY(0);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-cyan-500/30 overflow-hidden">
+    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-cyan-500/30 overflow-hidden touch-none">
       
-      {/* Dynamic Glass Blur Background */}
+      {/* Background with Adaptive Blur */}
       <div 
-        className="fixed inset-0 transition-all duration-700 -z-10"
+        className="fixed inset-0 transition-all duration-500 -z-10"
         style={{ 
-          filter: `blur(${dragY / 5}px)`,
-          opacity: isSuccess ? 0.3 : 1
+          filter: `blur(${dragY / 15}px)`,
+          transform: `scale(${1 + (dragY / 2000)})`
         }}
       >
-        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px]"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-blue-600/5 rounded-full blur-[100px]"></div>
+        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-cyan-500/20 rounded-full blur-[120px]"></div>
       </div>
 
-      <nav className="flex justify-between items-center px-8 py-10 sticky top-0 z-50 mix-blend-difference">
-        <div className="text-[10px] font-black tracking-[0.5em] uppercase">Studio / Support</div>
-        <div className="text-[10px] opacity-40 italic">2026 Edition</div>
+      <nav className="flex justify-between items-center px-8 py-10 sticky top-0 z-50">
+        <div className="text-[11px] font-black tracking-[0.5em] uppercase text-white">STUDIO / SUPPORT</div>
+        <div className="flex items-center gap-2">
+           <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"></div>
+           <span className="text-[9px] font-bold tracking-widest text-white/60">ACTIVE</span>
+        </div>
       </nav>
 
-      <main className={`transition-all duration-1000 px-8 ${isSuccess ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100'}`}>
-        <header className="mb-16">
-          <h1 className="text-[18vw] leading-[0.8] font-black uppercase tracking-tighter italic mix-blend-overlay">
-            Contact<br/>Me
+      <main className={`transition-all duration-700 px-8 ${isSuccess ? 'opacity-0 translate-y-[-20px]' : 'opacity-100'}`}>
+        <header className="mb-12">
+          <h1 className="text-[16vw] leading-[0.9] font-black uppercase tracking-tighter italic text-white">
+            Submit A<br/>Report
           </h1>
-          <div className="h-[1px] w-20 bg-white/20 mt-10"></div>
+          <p className="text-cyan-400 font-bold text-[10px] tracking-[0.4em] uppercase mt-6">Verified Secure Channel</p>
         </header>
 
-        <form id="reportForm" className="flex flex-col gap-12 pb-40">
-          <div className="group flex flex-col gap-2">
-            <label className="text-[10px] uppercase tracking-widest text-white/40">Full Name</label>
-            <input type="text" name="name" required className="bg-transparent border-b border-white/10 py-4 outline-none focus:border-white transition-all text-xl" placeholder="John Doe" />
+        <form id="reportForm" className="flex flex-col gap-10 pb-40">
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] uppercase font-black tracking-widest text-white">Full Name</label>
+            <input type="text" name="name" required className="bg-transparent border-b-2 border-white/20 py-4 outline-none focus:border-cyan-500 transition-all text-lg placeholder:text-white/20" placeholder="Enter your name" />
           </div>
 
-          <div className="group flex flex-col gap-2">
-            <label className="text-[10px] uppercase tracking-widest text-white/40">Email Address</label>
-            <input type="email" name="email" required className="bg-transparent border-b border-white/10 py-4 outline-none focus:border-white transition-all text-xl" placeholder="hello@studio.com" />
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] uppercase font-black tracking-widest text-white">Email Address</label>
+            <input type="email" name="email" required className="bg-transparent border-b-2 border-white/20 py-4 outline-none focus:border-cyan-500 transition-all text-lg placeholder:text-white/20" placeholder="Enter your email" />
           </div>
 
-          <div className="group flex flex-col gap-2">
-            <label className="text-[10px] uppercase tracking-widest text-white/40">WhatsApp / Telegram</label>
-            <input type="text" name="social" required className="bg-transparent border-b border-white/10 py-4 outline-none focus:border-white transition-all text-xl" placeholder="@username" />
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] uppercase font-black tracking-widest text-white">WhatsApp / Telegram</label>
+            <input type="text" name="social" required className="bg-transparent border-b-2 border-white/20 py-4 outline-none focus:border-cyan-500 transition-all text-lg placeholder:text-white/20" placeholder="@username or number" />
           </div>
 
-          <div className="group flex flex-col gap-2">
-            <label className="text-[10px] uppercase tracking-widest text-white/40">Message</label>
-            <textarea name="message" rows="3" required className="bg-transparent border-b border-white/10 py-4 outline-none focus:border-white transition-all text-xl resize-none" placeholder="Project details..."></textarea>
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] uppercase font-black tracking-widest text-white">Message</label>
+            <textarea name="message" rows="3" required className="bg-transparent border-b-2 border-white/20 py-4 outline-none focus:border-cyan-500 transition-all text-lg resize-none placeholder:text-white/20" placeholder="Describe the issue..."></textarea>
           </div>
         </form>
       </main>
 
-      {/* Swipe Up Success Layer */}
+      {/* SUCCESS SCREEN */}
       {isSuccess && (
-        <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center animate-in fade-in zoom-in duration-1000 bg-black/40 backdrop-blur-3xl">
+        <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center animate-in fade-in zoom-in duration-1000 bg-black/60 backdrop-blur-3xl">
           <div className="text-center px-10">
-            <div className="w-px h-24 bg-cyan-500 mx-auto mb-10 animate-tall"></div>
-            <h2 className="text-[15vw] font-black uppercase italic leading-none mb-6">Sent</h2>
-            <p className="text-[10px] tracking-[0.4em] uppercase opacity-40 mb-12">Message Logged Successfully</p>
+            <div className="w-20 h-20 bg-cyan-500 rounded-full flex items-center justify-center mx-auto mb-10 shadow-[0_0_40px_rgba(6,182,212,0.4)]">
+                <svg className="w-10 h-10 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="4"><path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </div>
+            <h2 className="text-[18vw] font-black uppercase italic leading-none mb-4 text-white">Sent</h2>
+            <p className="text-[10px] font-bold tracking-[0.4em] uppercase text-cyan-400 mb-12">Submission Received</p>
             <button 
               onClick={() => {setIsSuccess(false); setDragY(0);}} 
-              className="text-[9px] font-black tracking-[0.5em] uppercase border border-white/20 px-8 py-4 rounded-full hover:bg-white hover:text-black transition-all"
+              className="text-[10px] font-black tracking-[0.5em] uppercase border-2 border-white px-10 py-4 rounded-full hover:bg-white hover:text-black transition-all"
             >
-              Back to Studio
+              Done
             </button>
           </div>
         </div>
       )}
 
-      {/* Swipe Up Interaction Area */}
+      {/* SPRINGY SWIPE UP AREA */}
       {!isSuccess && (
         <div 
-          className="fixed bottom-0 left-0 right-0 h-32 flex flex-col items-center justify-end pb-8 cursor-pointer z-[100]"
+          className="fixed bottom-0 left-0 right-0 h-40 flex flex-col items-center justify-end pb-10 z-[100]"
+          onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          <div className="relative flex flex-col items-center gap-4">
-            <div 
-              className="text-[9px] font-black tracking-[0.5em] uppercase transition-all duration-300"
-              style={{ 
-                transform: `translateY(-${dragY / 2}px)`,
-                opacity: isSubmitting ? 0 : 1 - (dragY / 100)
-              }}
-            >
-              {isSubmitting ? "Uploading..." : "Swipe up to submit"}
-            </div>
+          <div 
+            className={`flex flex-col items-center gap-4 transition-transform ${!isDragging ? 'duration-500 spring-bounce' : 'duration-0'}`}
+            style={{ transform: `translateY(-${dragY}px)` }}
+          >
+            <p className={`text-[10px] font-black tracking-[0.5em] uppercase transition-colors ${dragY > THRESHOLD ? 'text-cyan-400' : 'text-white'}`}>
+              {isSubmitting ? "PROCESSING..." : dragY > THRESHOLD ? "RELEASE TO SUBMIT" : "SWIPE UP TO SUBMIT"}
+            </p>
             
-            {/* The Animated Arrow/Indicator */}
-            <div className="w-px h-12 bg-white/20 relative overflow-hidden">
+            {/* Animated Indicator */}
+            <div className="w-1 h-12 bg-white/10 relative rounded-full overflow-hidden">
                <div 
-                className="absolute inset-0 bg-cyan-400 transition-all duration-100"
-                style={{ transform: `translateY(${100 - dragY}%)` }}
+                className="absolute inset-0 bg-cyan-500 transition-all"
+                style={{ height: `${(dragY / MAX_PULL) * 100}%`, bottom: 0 }}
                ></div>
             </div>
           </div>
@@ -148,11 +165,12 @@ export default function App() {
       )}
 
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes tall {
-          from { height: 0; }
-          to { height: 96px; }
+        .spring-bounce {
+          transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .animate-tall { animation: tall 1.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        input::placeholder, textarea::placeholder {
+          color: rgba(255, 255, 255, 0.2);
+        }
       `}} />
     </div>
   );
