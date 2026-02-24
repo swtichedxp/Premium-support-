@@ -3,7 +3,8 @@ import React, { useState, useRef } from 'react';
 export default function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [sliderVal, setSliderVal] = useState(0);
+  const [dragX, setDragX] = useState(0); // 0 to 100
+  const sliderRef = useRef(null);
 
   const triggerSubmit = async () => {
     setIsSubmitting(true);
@@ -17,156 +18,152 @@ export default function App() {
         body: formData
       });
       const data = await response.json();
-      if (data.success) {
-        setIsSuccess(true);
-      } else {
+      if (data.success) setIsSuccess(true);
+      else {
         alert("Error: " + data.message);
-        setSliderVal(0);
+        setDragX(0);
       }
     } catch (error) {
-      alert("Submission failed. Check connection.");
-      setSliderVal(0);
+      alert("Network Error.");
+      setDragX(0);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleSliderChange = (e) => {
-    const val = parseInt(e.target.value);
-    setSliderVal(val);
+  const handleTouchMove = (e) => {
+    if (isSubmitting || isSuccess) return;
+    const touch = e.touches[0];
+    const rect = sliderRef.current.getBoundingClientRect();
     
-    // Trigger when slid 95% to the left (input is reversed)
-    if (val >= 95 && !isSubmitting) {
+    // Calculate pull from right to left
+    const width = rect.width;
+    const currentPos = touch.clientX - rect.left;
+    const pull = width - currentPos; 
+    
+    let percentage = (pull / width) * 100;
+    percentage = Math.max(0, Math.min(100, percentage));
+    
+    setDragX(percentage);
+
+    if (percentage >= 98) {
+      setDragX(100);
       triggerSubmit();
     }
   };
 
-  const handleRelease = () => {
-    if (sliderVal < 95) {
-      setSliderVal(0); // Snap back spring effect
-    }
+  const handleTouchEnd = () => {
+    if (dragX < 98) setDragX(0); // Spring back
   };
 
   return (
-    <div className="min-h-screen bg-[#020202] text-white font-sans selection:bg-cyan-500/30 overflow-x-hidden">
+    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-cyan-500/30 overflow-x-hidden touch-pan-y">
       
-      {/* Background Morphic Glow */}
-      <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-[-5%] right-[-5%] w-[400px] h-[400px] bg-cyan-600/10 rounded-full blur-[120px]"></div>
+      {/* Morphic Background */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-cyan-500/5 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-600/5 rounded-full blur-[120px]"></div>
       </div>
 
-      <nav className="flex justify-between items-center px-8 py-10 sticky top-0 z-50 bg-[#020202]/80 backdrop-blur-xl border-b border-white/5">
-        <div className="text-[11px] font-black tracking-[0.5em] uppercase text-white">STUDIO</div>
-        <div className="text-[10px] font-bold text-cyan-400">2026.v1</div>
+      <nav className="flex justify-between items-center px-8 py-10 sticky top-0 z-50 bg-[#050505]/80 backdrop-blur-xl border-b border-white/5">
+        <div className="text-[10px] font-black tracking-[0.5em] uppercase text-cyan-400">PREMIUM SUPPORT</div>
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_#22c55e]"></div>
+          <span className="text-[8px] font-bold tracking-widest text-white/40 uppercase">Secure</span>
+        </div>
       </nav>
 
-      <main className={`transition-all duration-700 px-8 pt-10 ${isSuccess ? 'blur-3xl opacity-0 scale-90' : 'opacity-100'}`}>
+      <main className={`transition-all duration-700 px-8 pt-10 ${isSuccess ? 'blur-2xl opacity-0' : 'opacity-100'}`}>
         <header className="mb-14">
           <h1 className="text-[14vw] leading-[0.85] font-black uppercase tracking-tighter italic text-white">
-            Send A<br/>Report
+            Submit A<br/>Report
           </h1>
+          <div className="h-1 w-12 bg-cyan-500 mt-6 shadow-[0_0_15px_#22d3ee]"></div>
         </header>
 
-        <form id="reportForm" className="flex flex-col gap-10 pb-48">
+        <form id="reportForm" className="flex flex-col gap-10 pb-52">
           {[
             { label: "Full Name", name: "name", ph: "Enter your name" },
             { label: "Email Address", name: "email", ph: "Enter your email" },
-            { label: "Contact (WA/TG)", name: "social", ph: "@username" }
+            { label: "Direct Contact", name: "social", ph: "@username or phone number" }
           ].map((f) => (
             <div key={f.name} className="flex flex-col gap-3">
-              <label className="text-[10px] uppercase font-black tracking-widest text-cyan-500">{f.label}</label>
+              <label className="text-[10px] uppercase font-black tracking-widest text-white/90">{f.label}</label>
               <input 
                 type="text" name={f.name} required placeholder={f.ph}
-                className="bg-transparent border-b-2 border-white/10 py-4 outline-none focus:border-white transition-all text-xl text-white placeholder:text-white/10"
+                className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-cyan-500 transition-all text-lg placeholder:text-white/10"
               />
             </div>
           ))}
 
           <div className="flex flex-col gap-3">
-            <label className="text-[10px] uppercase font-black tracking-widest text-cyan-500">Message</label>
+            <label className="text-[10px] uppercase font-black tracking-widest text-white/90">Details</label>
             <textarea 
               name="message" rows="4" required placeholder="Describe the issue..."
-              className="bg-transparent border-b-2 border-white/10 py-4 outline-none focus:border-white transition-all text-xl text-white placeholder:text-white/10 resize-none"
+              className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-cyan-500 transition-all text-lg placeholder:text-white/10 resize-none"
             ></textarea>
           </div>
         </form>
       </main>
 
-      {/* Success State */}
+      {/* Success View */}
       {isSuccess && (
         <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-8 animate-in fade-in zoom-in-95 duration-500">
-          <div className="bg-white/5 border border-white/10 backdrop-blur-3xl p-10 rounded-[30px] w-full max-w-sm text-center shadow-2xl">
-            <div className="w-20 h-20 bg-cyan-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_40px_rgba(6,182,212,0.4)]">
+          <div className="bg-white/5 border border-white/10 backdrop-blur-3xl p-10 rounded-[40px] w-full max-w-sm text-center shadow-2xl">
+            <div className="w-20 h-20 bg-cyan-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-[0_0_40px_rgba(6,182,212,0.4)]">
                <svg className="w-10 h-10 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="4"><path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </div>
-            <h2 className="text-4xl font-black uppercase italic mb-2 text-white">Success</h2>
-            <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-cyan-400 mb-8 text-white">Report Logged</p>
+            <h2 className="text-4xl font-black uppercase italic mb-2">Sent</h2>
+            <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-cyan-400 mb-10">Verification Successful</p>
             <button 
-              onClick={() => {setIsSuccess(false); setSliderVal(0);}} 
-              className="w-full py-4 bg-white text-black font-black uppercase text-[10px] tracking-[0.3em] rounded-xl transition-all active:scale-95"
+              onClick={() => {setIsSuccess(false); setDragX(0);}} 
+              className="w-full py-5 bg-white text-black font-black uppercase text-[10px] tracking-[0.4em] rounded-2xl active:scale-95 transition-all"
             >
-              Back
+              Return Home
             </button>
           </div>
         </div>
       )}
 
-      {/* Morphic Horizontal Slide-to-Submit (RIGHT TO LEFT) */}
+      {/* Fluid Horizontal Slider (Right to Left) */}
       {!isSuccess && (
-        <div className="fixed bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-[#020202] via-[#020202]/90 to-transparent z-[90]">
-          <div className="max-w-md mx-auto relative h-20 bg-white/5 border border-white/10 backdrop-blur-2xl rounded-2xl flex items-center px-4">
-            
-            {/* The Track Text */}
+        <div className="fixed bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-[#050505] to-transparent z-[90]">
+          <div 
+            ref={sliderRef}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            className="max-w-md mx-auto relative h-20 bg-white/5 border border-white/10 backdrop-blur-2xl rounded-3xl flex items-center overflow-hidden cursor-pointer"
+          >
+            {/* The Text Track */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <span className={`text-[10px] font-black tracking-[0.4em] uppercase transition-all duration-300 ${sliderVal > 10 ? 'opacity-0' : 'opacity-30'}`}>
-                {isSubmitting ? "SENDING..." : "Slide Left to Submit"}
+              <span className={`text-[10px] font-black tracking-[0.4em] uppercase transition-all duration-300 ${dragX > 20 ? 'opacity-0 scale-95' : 'opacity-30 scale-100'}`}>
+                {isSubmitting ? "TRANSMITTING..." : "Slide Left to Submit"}
               </span>
             </div>
 
-            {/* The Slider */}
-            <input 
-              type="range"
-              min="0"
-              max="100"
-              value={sliderVal}
-              onChange={handleSliderChange}
-              onTouchEnd={handleRelease}
-              onMouseUp={handleRelease}
-              disabled={isSubmitting}
-              className={`w-full h-full appearance-none bg-transparent z-10 cursor-pointer slider-horizontal-reversed ${!isSubmitting ? 'active:cursor-grabbing' : ''}`}
-            />
-
-            {/* The Visual Progress Fill (Right to Left) */}
+            {/* The Morphic Liquid Fill */}
             <div 
-              className="absolute right-4 h-12 bg-cyan-500 rounded-xl transition-all duration-75 flex items-center justify-start pl-4"
-              style={{ width: `calc(${sliderVal}% + 48px)`, opacity: sliderVal > 5 ? 1 : 0 }}
+              className={`absolute right-0 top-0 bottom-0 bg-cyan-500 transition-all ${dragX === 0 ? 'duration-500 spring-snap' : 'duration-75'}`}
+              style={{ width: `${dragX}%` }}
             >
-              {sliderVal > 70 && <span className="text-black font-black text-[9px] tracking-widest uppercase">Release</span>}
+              {/* The Handle / Thumb */}
+              <div className="absolute left-0 top-0 bottom-0 w-20 flex items-center justify-center">
+                <div className="w-14 h-14 bg-white rounded-2xl shadow-xl flex items-center justify-center">
+                  <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       )}
 
       <style dangerouslySetInnerHTML={{ __html: `
-        /* Handle styling */
-        .slider-horizontal-reversed::-webkit-slider-thumb {
-          appearance: none;
-          width: 48px;
-          height: 48px;
-          background: white;
-          border-radius: 12px;
-          cursor: pointer;
-          box-shadow: 0 0 20px rgba(0,0,0,0.5);
-          transition: transform 0.2s ease;
-          position: relative;
-          z-index: 20;
+        .spring-snap {
+          transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        /* Custom track direction logic handled via range input flip */
-        .slider-horizontal-reversed {
-          direction: rtl; /* Makes it slide from right to left */
-        }
-        input, textarea { font-size: 16px !important; } /* Prevents iOS auto-zoom */
+        input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.1); }
       `}} />
     </div>
   );
-}
+          }
+              
